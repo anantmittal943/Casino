@@ -19,7 +19,7 @@ int generateRandomNumber(int difficulty) {
     return disturb(gen);
 }
 
-void playRound(Player& player) {
+void playRound(Player &player) {
     int betAmount, guess, maxNumber = 10;
 
     cout << "Current Balance: $" << player.balance << "\n";
@@ -27,7 +27,7 @@ void playRound(Player& player) {
     cin >> betAmount;
 
     if (betAmount > player.balance) {
-        cout<<"Not enough balance !!";
+        cout << "Not enough balance !!";
         return;
     }
 
@@ -37,7 +37,7 @@ void playRound(Player& player) {
     int winningNumber = generateRandomNumber(maxNumber);
 
     if (guess == winningNumber) {
-        int winnings = betAmount*2;
+        int winnings = betAmount * 2;
         player.balance += winnings;
         cout << "Jackpot! The number was " << winningNumber << ". You won $" << winnings << "!\n";
     } else {
@@ -47,27 +47,27 @@ void playRound(Player& player) {
 }
 
 int main() {
-    cout<<"====--- Welcome to the Terminal Casino ---===="<<endl;
+    cout << "====--- Welcome to the Terminal Casino ---====" << endl;
 
     string playerName;
-    cout<<"Enter your name: ";
+    cout << "Enter your name: ";
     getline(cin, playerName);
 
     Player p1(playerName, 1000);
 
     char keepPlaying = 'y';
-    while(keepPlaying == 'y' || keepPlaying == 'Y') {
-        if (p1.balance<=0) {
-            cout<<"You're broke !!\nGAME OVER";
+    while (keepPlaying == 'y' || keepPlaying == 'Y') {
+        if (p1.balance <= 0) {
+            cout << "You're broke !!\nGAME OVER";
             break;
         }
 
         playRound(p1);
 
-        cout<<"\nPlay again? (y/n): ";
-        cin>>keepPlaying;
+        cout << "\nPlay again? (y/n): ";
+        cin >> keepPlaying;
     }
 
-    cout<<"You're leaving with $"<<p1.balance<<". Thanks for playing !!"<<endl;
+    cout << "You're leaving with $" << p1.balance << ". Thanks for playing !!" << endl;
     return 0;
 }
