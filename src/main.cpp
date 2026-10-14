@@ -1,15 +1,18 @@
 #include <iostream>
 #include <string>
 #include <random>
+#include <limits>
+#include <sstream>
 
 using namespace std;
 
 class Player {
 public:
     string name;
-    int balance;
+    long long balance;
 
-    Player(string name, int balance) : name(name), balance(balance) {}
+    Player(string name, int balance) : name(name), balance(balance) {
+    }
 };
 
 int generateRandomNumber(int difficulty) {
@@ -19,31 +22,83 @@ int generateRandomNumber(int difficulty) {
     return disturb(gen);
 }
 
+bool readInteger(const string &prompt, long long &value) {
+    string line;
+
+    while (true) {
+        cout << prompt;
+
+        if (!getline(cin, line)) {
+            return false;
+        }
+
+        stringstream ss(line);
+        char extra;
+
+        if ((ss >> value) && !(ss >> extra)) {
+            return true;
+        }
+
+        cout << "Invalid input. Please try again: ";
+    }
+}
+
 void playRound(Player &player) {
-    int betAmount, guess, maxNumber = 10;
+    long long betAmount, guess;
+    const int maxNumber = 10;
 
-    cout << "Current Balance: $" << player.balance << "\n";
-    cout << "Enter bet amount: $";
-    cin >> betAmount;
+    cout << "Current Balance: $" << player.balance << endl;
 
-    if (betAmount > player.balance) {
-        cout << "Not enough balance !!";
-        return;
+    while (true) {
+        if (readInteger("Enter bet amount: $", betAmount)) {
+            return;
+        }
+
+        if (betAmount <= 0) {
+            cout << "Bet must be greater than $0!" << endl;
+        } else if (betAmount > player.balance) {
+            cout << "Not enough balance !!\nTry smaller bets." << endl;
+        } else if (betAmount > numeric_limits<long long>::max()) {
+            cout << "Bet amount is too large !!" << endl;
+        } else {
+            break;
+        }
     }
 
-    cout << "Guess a number between 1 and " << maxNumber << ": ";
-    cin >> guess;
+    while (true) {
+        if (readInteger("Guess a number between 1 and " + to_string(maxNumber) + ": ", guess)) {
+            return;
+        }
+
+        if (guess < 1 || guess > maxNumber) {
+            cout << "Your guess must be between 1 and " << maxNumber << endl;
+        } else {
+            break;
+        }
+    }
 
     int winningNumber = generateRandomNumber(maxNumber);
 
+    player.balance -= betAmount; //early deduction
+
     if (guess == winningNumber) {
-        int winnings = betAmount * 2;
-        player.balance += winnings;
-        cout << "Jackpot! The number was " << winningNumber << ". You won $" << winnings << "!\n";
+        long long payout = betAmount * 10;
+
+        if (payout > numeric_limits<long long>::max() - player.balance) {
+            cout << "Payout exceeds the supported balance limit." << endl;
+            player.balance += betAmount; //reimbursement
+            return;
+        }
+
+        player.balance += payout;
+        cout << "\nJackpot! The number was " << winningNumber << ".\n";
+        cout << "Total payout: $" << payout << "\n";
+        cout << "Net profit: $" << payout - betAmount << "\n";
     } else {
-        player.balance -= betAmount;
-        cout << "Ouch. The winning number was " << winningNumber << ". You lost $" << betAmount << ".\n";
+        cout << "\nOuch. The winning number was " << winningNumber << ".\nYou lost $" << betAmount << ".\n";
     }
+
+    cout << "Remaining balance: $" << player.balance << "\n";
 }
 
 int main() {
@@ -51,23 +106,47 @@ int main() {
 
     string playerName;
     cout << "Enter your name: ";
-    getline(cin, playerName);
 
-    Player p1(playerName, 1000);
+    if (!getline(cin, playerName)) {
+        return 0;
+    }
 
-    char keepPlaying = 'y';
-    while (keepPlaying == 'y' || keepPlaying == 'Y') {
+    if (playerName.empty()) {
+        playerName = "Player";
+    }
+
+    Player p1(playerName, 10000);
+
+    while (true) {
         if (p1.balance <= 0) {
-            cout << "You're broke !!\nGAME OVER";
+            cout << "\nYou're broke!\nGAME OVER\n";
             break;
         }
 
         playRound(p1);
 
+        if (!cin) {
+            break;
+        }
+
+        string choice;
         cout << "\nPlay again? (y/n): ";
-        cin >> keepPlaying;
+
+        if (!getline(cin, choice)) {
+            break;
+        }
+
+        if (choice == "n" || choice == "N") {
+            break;
+        }
+
+        if (choice != "y" && choice != "Y") {
+            cout << "Invalid choice. Exiting game.\n";
+            break;
+        }
     }
 
-    cout << "You're leaving with $" << p1.balance << ". Thanks for playing !!" << endl;
+    cout << "\nYou're leaving with $" << p1.balance << ". Thanks for playing!\n";
+
     return 0;
 }
