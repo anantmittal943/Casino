@@ -3,4 +3,4 @@ project(Casino)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(Casino main.cpp)
+add_executable(Casino src/main.cpp)
