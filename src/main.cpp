@@ -3,16 +3,23 @@
 #include <random>
 #include <limits>
 #include <sstream>
+#include "../include/Player.h"
 
 using namespace std;
+using player::Player;
 
-class Player {
-public:
-    string name;
-    long long balance;
+struct RoundResult {
+    bool valid = false;
+    string error;
 
-    Player(string name, int balance) : name(name), balance(balance) {
-    }
+    int guessedNumber = 0;
+    int winningNumber = 0;
+
+    long long betAmount = 0;
+    long long payout = 0;
+    long long netChange = 0;
+
+    bool won = false;
 };
 
 int generateRandomNumber(int difficulty) {
@@ -47,7 +54,7 @@ void playRound(Player &player) {
     long long betAmount, guess;
     const int maxNumber = 10;
 
-    cout << "Current Balance: $" << player.balance << endl;
+    cout << "Current Balance: $" << player.getBalance() << endl;
 
     while (true) {
         if (readInteger("Enter bet amount: $", betAmount)) {
@@ -56,7 +63,7 @@ void playRound(Player &player) {
 
         if (betAmount <= 0) {
             cout << "Bet must be greater than $0!" << endl;
-        } else if (betAmount > player.balance) {
+        } else if (betAmount > player.getBalance()) {
             cout << "Not enough balance !!\nTry smaller bets." << endl;
         } else if (betAmount > numeric_limits<long long>::max()) {
             cout << "Bet amount is too large !!" << endl;
@@ -79,18 +86,18 @@ void playRound(Player &player) {
 
     int winningNumber = generateRandomNumber(maxNumber);
 
-    player.balance -= betAmount; //early deduction
+    player.deductBet(betAmount); //early deduction
 
     if (guess == winningNumber) {
         long long payout = betAmount * 10;
 
-        if (payout > numeric_limits<long long>::max() - player.balance) {
+        if (payout > numeric_limits<long long>::max() - player.getBalance()) {
             cout << "Payout exceeds the supported balance limit." << endl;
-            player.balance += betAmount; //reimbursement
+            player.addMoney(betAmount); //reimbursement
             return;
         }
 
-        player.balance += payout;
+        player.addMoney(payout); //win
         cout << "\nJackpot! The number was " << winningNumber << ".\n";
         cout << "Total payout: $" << payout << "\n";
         cout << "Net profit: $" << payout - betAmount << "\n";
@@ -98,7 +105,7 @@ void playRound(Player &player) {
         cout << "\nOuch. The winning number was " << winningNumber << ".\nYou lost $" << betAmount << ".\n";
     }
 
-    cout << "Remaining balance: $" << player.balance << "\n";
+    cout << "Remaining balance: $" << player.getBalance() << "\n";
 }
 
 int main() {
@@ -118,7 +125,7 @@ int main() {
     Player p1(playerName, 10000);
 
     while (true) {
-        if (p1.balance <= 0) {
+        if (p1.getBalance() <= 0) {
             cout << "\nYou're broke!\nGAME OVER\n";
             break;
         }
@@ -146,7 +153,7 @@ int main() {
         }
     }
 
-    cout << "\nYou're leaving with $" << p1.balance << ". Thanks for playing!\n";
+    cout << "\nYou're leaving with $" << p1.getBalance() << ". Thanks for playing!\n";
 
     return 0;
 }
