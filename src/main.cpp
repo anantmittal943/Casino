@@ -50,6 +50,70 @@ bool readInteger(const string &prompt, long long &value) {
     }
 }
 
+RoundResult resolveRound(Player &player, long long betAmount, int guess, int winningNumber, int maxNumber = 10) {
+    RoundResult result;
+
+    if (betAmount <= 0) {
+        result.error = "Bet must be greater than zero !!";
+        return result;
+    }
+
+    if (!player.canAfford(betAmount)) {
+        result.error = "Insufficient balance !!";
+        return result;
+    }
+
+    if (guess < 1 || guess > maxNumber) {
+        result.error = "Guessed number is out of range.";
+        return result;
+    }
+
+    //handling overflow in diff payout situations
+    if (guess == winningNumber) {
+        if (betAmount > numeric_limits<long long>::max() / 10) {
+            result.error = "Payout is too large.";
+            return result;
+        }
+
+        result.payout = betAmount * 10;
+
+        long long balanceAfterBet = player.getBalance() - betAmount;
+
+        if (result.payout > numeric_limits<long long>::max() - balanceAfterBet) {
+            result.error = "Balance limit exceeded.";
+            return result;
+        }
+    }
+
+    //now proceed with the transaction
+    if (!player.deductBet(betAmount)) {
+        result.error = "Could not deduct bet.";
+        return result;
+    }
+
+    if (guess == winningNumber) {
+        if (!player.addMoney(result.payout)) {
+            player.addMoney(betAmount); //reimbursement
+            result.error = "Could not credit payout.";
+            return result;
+        }
+
+        result.won = true;
+        result.netChange = result.payout - betAmount;
+    } else {
+        result.won = false;
+        result.payout = 0;
+        result.netChange = -betAmount;
+    }
+
+    result.guessedNumber = guess;
+    result.winningNumber = winningNumber;
+    result.betAmount = betAmount;
+    result.valid = true;
+
+    return result;
+}
+
 void playRound(Player &player) {
     long long betAmount, guess;
     const int maxNumber = 10;

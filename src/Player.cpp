@@ -8,9 +8,10 @@
 #include <limits>
 
 namespace player {
-    Player::Player(const std::string &name, int balance) : name(name), balance(balance) {}
+    Player::Player(const std::string &name, int balance) : name(name), balance(balance) {
+    }
 
-    const std::string& Player::getName() const {
+    const std::string &Player::getName() const {
         return name;
     }
 
@@ -35,7 +36,7 @@ namespace player {
         if (amount < 0 ||
             amount > std::numeric_limits<long long>::max() - balance) {
             return false;
-            }
+        }
 
         balance += amount;
         return true;
