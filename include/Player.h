@@ -1,7 +1,3 @@
-//
-// Created by anant on 15-10-2026.
-//
-
 #ifndef CASINO_PLAYER_H
 #define CASINO_PLAYER_H
 
@@ -14,7 +10,7 @@ namespace player {
         long long balance;
 
     public:
-        Player(const std::string &name, int balance);
+        Player(const std::string &name, long long initialBalance);
 
         const std::string &getName() const;
 

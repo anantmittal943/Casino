@@ -1,14 +1,14 @@
-//
-// Created by anant on 15-10-2026.
-//
+#include "Player.h"
 
-#include "../include/Player.h"
-
-#include <string>
 #include <limits>
+#include <stdexcept>
 
 namespace player {
-    Player::Player(const std::string &name, int balance) : name(name), balance(balance) {
+    Player::Player(const std::string &name, long long initialBalance)
+        : name(name), balance(initialBalance) {
+        if (initialBalance < 0) {
+            throw std::invalid_argument("Initial balance cannot be negative.");
+        }
     }
 
     const std::string &Player::getName() const {

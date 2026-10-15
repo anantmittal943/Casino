@@ -50,16 +50,18 @@ The current implementation starts every session with `$1,000`.
 
 ## Current Limitations
 
-This is intentionally an early version. Before expanding the game, the following correctness and design issues should be
-addressed:
+This is intentionally an early version. The core now validates bets and number ranges, checks payout overflow, keeps
+player state private, and returns a structured result from the game logic. Remaining work includes:
 
-- Validate negative, zero, non-numeric, and out-of-range input.
-- Deduct the bet before calculating a win payout and document whether payouts are gross winnings or net profit.
-- Reuse one random-number engine instead of creating one for every round.
-- Encapsulate player state rather than exposing `name` and `balance` as public fields.
-- Return a structured round result instead of combining input, game rules, and output in `playRound()`.
-- Use a money representation with appropriate overflow checks.
 - Track wins, losses, net profit, largest win, and round history.
+- Add configurable difficulty, starting balances, and betting limits.
+- Consider a money representation with fractional units if the game needs cents.
+
+The game logic has dependency-free CTest coverage. Run it with:
+
+```bash
+ctest --test-dir build --output-on-failure
+```
 
 ## Development Roadmap
 
