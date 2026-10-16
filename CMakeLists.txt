@@ -14,7 +14,27 @@ target_include_directories(casino_core PUBLIC include)
 add_executable(Casino src/main.cpp)
 target_link_libraries(Casino PRIVATE casino_core)
 
-enable_testing()
-add_executable(CasinoTests tests/RoundLogicTests.cpp)
-target_link_libraries(CasinoTests PRIVATE casino_core)
-add_test(NAME CasinoTests COMMAND CasinoTests)
+include(CTest)
+
+if (BUILD_TESTING)
+    include(FetchContent)
+
+    FetchContent_Declare(
+            googletest
+            URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+
+    add_executable(
+            casino_tests
+            tests/PlayerTests.cpp
+            tests/BettingTests.cpp
+            tests/StatisticsTests.cpp
+    )
+    target_link_libraries(casino_tests PRIVATE casino_core GTest::gtest_main)
+
+    include(GoogleTest)
+    gtest_discover_tests(casino_tests)
+endif ()

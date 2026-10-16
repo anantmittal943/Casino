@@ -82,12 +82,8 @@ namespace casino {
 
         const std::ios::fmtflags originalFlags = std::cout.flags();
         const std::streamsize originalPrecision = std::cout.precision();
-        const double winRate = totalRounds == 0
-                                   ? 0.0
-                                   : 100.0 * static_cast<double>(wins) /
-                                     static_cast<double>(totalRounds);
         std::cout << std::fixed << std::setprecision(2)
-                << "Win rate: " << winRate << "%\n";
+                << "Win rate: " << getWinRate() << "%\n";
         std::cout.flags(originalFlags);
         std::cout.precision(originalPrecision);
 
@@ -164,6 +160,14 @@ namespace casino {
 
     long long Statistics::getLargestWin() const {
         return largestWin;
+    }
+
+    double Statistics::getWinRate() const {
+        if (totalRounds == 0) {
+            return 0.0;
+        }
+        return 100.0 * static_cast<double>(wins) /
+               static_cast<double>(totalRounds);
     }
 
     std::size_t Statistics::getCurrentWinStreak() const {

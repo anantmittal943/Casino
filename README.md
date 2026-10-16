@@ -57,7 +57,8 @@ Session history is kept in memory and is discarded when the program exits. Cumul
 numeric limits and report when saturation occurs. Money is represented as whole-number units; fractional currency
 would require a separate representation.
 
-The game logic has dependency-free CTest coverage. Run it with:
+The unit tests use GoogleTest, which CMake fetches during configuration when
+`BUILD_TESTING` is enabled. Run the registered tests with:
 
 ```bash
 ctest --test-dir build --output-on-failure

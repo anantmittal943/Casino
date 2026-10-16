@@ -54,26 +54,32 @@ namespace {
             std::cout << "Choose an option between 1 and 4.\n";
         }
 
+        casino::Difficulty difficulty = casino::Difficulty::Medium;
+        long long customRange = 0;
         if (choice == 1) {
-            settings.maxNumber = 5;
+            difficulty = casino::Difficulty::Easy;
         } else if (choice == 2) {
-            settings.maxNumber = 10;
+            difficulty = casino::Difficulty::Medium;
         } else if (choice == 3) {
-            settings.maxNumber = 20;
+            difficulty = casino::Difficulty::Hard;
         } else {
-            long long customRange = 0;
+            difficulty = casino::Difficulty::Custom;
             while (true) {
                 if (!readInteger(
                     "Enter maximum number (2-1000): ",
                     customRange)) {
                     return false;
                 }
-                if (customRange >= 2 && customRange <= 1'000) {
-                    settings.maxNumber = static_cast<int>(customRange);
+                if (casino::isValidCustomRange(customRange)) {
                     break;
                 }
                 std::cout << "Range must be between 2 and 1000.\n";
             }
+        }
+
+        if (!casino::setDifficulty(settings, difficulty, customRange)) {
+            std::cout << "Invalid difficulty settings.\n";
+            return false;
         }
 
         settings.minBet = 1;

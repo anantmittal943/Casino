@@ -29,6 +29,8 @@ namespace casino {
 
         long long getLargestWin() const;
 
+        double getWinRate() const;
+
         std::size_t getCurrentWinStreak() const;
 
         std::size_t getLongestWinStreak() const;
