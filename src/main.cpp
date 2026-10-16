@@ -1,15 +1,15 @@
+#include <algorithm>
 #include <iostream>
 #include <random>
 #include <sstream>
 #include <string>
 
+#include "GameSettings.h"
 #include "Player.h"
 #include "RoundLogic.h"
+#include "Statistics.h"
 
 namespace {
-    constexpr int maxNumber = 10;
-    constexpr long long startingBalance = 1'000;
-
     int generateRandomNumber(int upperBound) {
         static std::random_device randomDevice;
         static std::mt19937 engine(randomDevice());
@@ -36,7 +36,58 @@ namespace {
         }
     }
 
-    bool playRound(player::Player &player) {
+    bool configureSettings(casino::GameSettings &settings) {
+        std::cout << "\n========== GAME SETTINGS ==========\n"
+                << "1. Easy   (1-5)\n"
+                << "2. Medium (1-10)\n"
+                << "3. Hard   (1-20)\n"
+                << "4. Custom range\n";
+
+        long long choice = 0;
+        while (true) {
+            if (!readInteger("Select difficulty: ", choice)) {
+                return false;
+            }
+            if (choice >= 1 && choice <= 4) {
+                break;
+            }
+            std::cout << "Choose an option between 1 and 4.\n";
+        }
+
+        if (choice == 1) {
+            settings.maxNumber = 5;
+        } else if (choice == 2) {
+            settings.maxNumber = 10;
+        } else if (choice == 3) {
+            settings.maxNumber = 20;
+        } else {
+            long long customRange = 0;
+            while (true) {
+                if (!readInteger(
+                    "Enter maximum number (2-1000): ",
+                    customRange)) {
+                    return false;
+                }
+                if (customRange >= 2 && customRange <= 1'000) {
+                    settings.maxNumber = static_cast<int>(customRange);
+                    break;
+                }
+                std::cout << "Range must be between 2 and 1000.\n";
+            }
+        }
+
+        settings.minBet = 1;
+        settings.maxBet = std::min(settings.startingBalance, 1'000'000LL);
+        std::cout << "\nMinimum bet: $" << settings.minBet
+                << "\nMaximum bet: $" << settings.maxBet
+                << "\nDifficulty configured successfully!\n";
+        return true;
+    }
+
+    bool playRound(
+        player::Player &player,
+        const casino::GameSettings &settings,
+        casino::Statistics &stats) {
         long long betAmount = 0;
         long long guessInput = 0;
 
@@ -47,8 +98,10 @@ namespace {
                 return false;
             }
 
-            if (betAmount <= 0) {
-                std::cout << "Bet must be greater than zero.\n";
+            if (betAmount < settings.minBet) {
+                std::cout << "Minimum bet is $" << settings.minBet << ".\n";
+            } else if (betAmount > settings.maxBet) {
+                std::cout << "Maximum bet is $" << settings.maxBet << ".\n";
             } else if (!player.canAfford(betAmount)) {
                 std::cout << "Not enough balance. Try a smaller bet.\n";
             } else {
@@ -57,30 +110,35 @@ namespace {
         }
 
         while (true) {
-            if (!readInteger("Guess a number between 1 and 10: ", guessInput)) {
+            if (!readInteger(
+                "Guess a number between 1 and " +
+                std::to_string(settings.maxNumber) + ": ",
+                guessInput)) {
                 return false;
             }
 
-            if (guessInput < 1 || guessInput > maxNumber) {
-                std::cout << "Your guess must be between 1 and "
-                        << maxNumber << ".\n";
+            if (guessInput < 1 || guessInput > settings.maxNumber) {
+                std::cout << "Guess must be between 1 and "
+                        << settings.maxNumber << ".\n";
             } else {
                 break;
             }
         }
 
-        const int winningNumber = generateRandomNumber(maxNumber);
+        const int winningNumber = generateRandomNumber(settings.maxNumber);
         const casino::RoundResult result = casino::resolveRound(
             player,
             betAmount,
             static_cast<int>(guessInput),
             winningNumber,
-            maxNumber);
+            settings.maxNumber);
 
         if (!result.valid) {
             std::cout << "Round error: " << result.error << '\n';
             return true;
         }
+
+        stats.recordRound(result);
 
         if (result.won) {
             std::cout << "\nJackpot! The number was "
@@ -96,25 +154,6 @@ namespace {
         std::cout << "Remaining balance: $" << player.getBalance() << '\n';
         return true;
     }
-
-    bool askToPlayAgain() {
-        while (true) {
-            std::string choice;
-            std::cout << "\nPlay again? (y/n): ";
-            if (!std::getline(std::cin, choice)) {
-                return false;
-            }
-
-            if (choice == "y" || choice == "Y") {
-                return true;
-            }
-            if (choice == "n" || choice == "N") {
-                return false;
-            }
-
-            std::cout << "Please enter y or n.\n";
-        }
-    }
 } // namespace
 
 int main() {
@@ -129,23 +168,54 @@ int main() {
         playerName = "Player";
     }
 
-    player::Player currentPlayer(playerName, startingBalance);
+    casino::GameSettings settings;
+    if (!configureSettings(settings)) {
+        std::cout << "\nUnable to configure game. Exiting.\n";
+        return 0;
+    }
 
-    while (currentPlayer.getBalance() > 0) {
-        if (!playRound(currentPlayer)) {
-            std::cout << "\nInput ended. Exiting game.\n";
+    player::Player currentPlayer(playerName, settings.startingBalance);
+    casino::Statistics stats;
+
+    std::cout << "\nWelcome, " << currentPlayer.getName() << "!\n"
+            << "Starting balance: $" << currentPlayer.getBalance() << '\n'
+            << "Number range: 1-" << settings.maxNumber << '\n';
+
+    while (true) {
+        std::cout << "\n========== CASINO MENU ==========\n"
+                << "1. Play a round\n"
+                << "2. View statistics\n"
+                << "3. View round history\n"
+                << "4. Quit\n";
+
+        long long choice = 0;
+        if (!readInteger("Choose an option: ", choice)) {
             break;
         }
-        if (currentPlayer.getBalance() <= 0) {
-            std::cout << "\nYou're broke!\nGAME OVER\n";
+
+        if (choice == 1) {
+            if (currentPlayer.getBalance() <= 0) {
+                std::cout << "You're out of money! GAME OVER.\n";
+                break;
+            }
+            if (!playRound(currentPlayer, settings, stats)) {
+                std::cout << "\nInput ended. Exiting game.\n";
+                break;
+            }
+        } else if (choice == 2) {
+            stats.displayStatistics();
+        } else if (choice == 3) {
+            stats.displayHistory();
+        } else if (choice == 4) {
             break;
-        }
-        if (!askToPlayAgain()) {
-            break;
+        } else {
+            std::cout << "Invalid option. Choose 1-4.\n";
         }
     }
 
-    std::cout << "\nYou're leaving with $" << currentPlayer.getBalance()
-            << ". Thanks for playing!\n";
+    std::cout << "\n========== SESSION SUMMARY ==========\n";
+    stats.displayStatistics();
+    std::cout << "\nFinal balance: $" << currentPlayer.getBalance() << '\n'
+            << "Thanks for playing, " << currentPlayer.getName() << "!\n";
     return 0;
 }

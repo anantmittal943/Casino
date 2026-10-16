@@ -7,7 +7,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(casino_core
         src/Player.cpp
-        src/RoundLogic.cpp)
+        src/RoundLogic.cpp
+        src/Statistics.cpp)
 target_include_directories(casino_core PUBLIC include)
 
 add_executable(Casino src/main.cpp)

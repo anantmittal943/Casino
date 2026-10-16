@@ -31,16 +31,15 @@ namespace casino {
         }
 
         if (guess == winningNumber) {
-            constexpr long long payoutMultiplier = 10;
             const long long maximumBalance =
                     std::numeric_limits<long long>::max();
 
-            if (betAmount > maximumBalance / payoutMultiplier) {
+            if (betAmount > maximumBalance / maxNumber) {
                 result.error = "Payout is too large.";
                 return result;
             }
 
-            result.payout = betAmount * payoutMultiplier;
+            result.payout = betAmount * maxNumber;
             const long long balanceAfterBet =
                     player.getBalance() - betAmount;
 

@@ -1,16 +1,17 @@
 # Casino
 
-Casino is a small C++20 command-line game built as a starting point for a larger casino project. The current version
-lets a player create a session with a starting balance of `$1,000`, place bets, and guess a randomly generated number
-from 1 to 10.
+Casino is a C++20 terminal number-guessing game. A session can use Easy, Medium, Hard, or a custom number range, with a
+fixed `$5,000` starting balance, bounded bets, range-based payouts, live statistics, and round-by-round history.
 
 ## Current Features
 
 - Player name and balance tracking
-- Number guessing game with a configurable range in the source
+- Easy (1-5), Medium (1-10), Hard (1-20), and custom (1-1000) ranges
+- Fixed `$5,000` starting balance and enforced minimum/maximum bets
+- Gross winning payout equals the selected range multiplied by the bet
 - Random winning number generation
-- Bet wins and losses
-- Replay loop until the player chooses to stop or runs out of money
+- Session win/loss, wager, payout, profit/loss, largest-win, and streak statistics
+- In-memory round history and a final session summary
 - CMake-based build configuration
 
 ## Requirements
@@ -41,21 +42,20 @@ The project can also be opened directly in CLion using the included `CMakeLists.
 
 ## How to Play
 
-1. Enter a player name.
-2. Enter a bet amount.
-3. Guess a number from 1 to 10.
-4. Choose whether to play another round.
+1. Enter a player name and select a difficulty or custom range.
+2. Start with a `$5,000` balance.
+3. Use the menu to play, view statistics, inspect round history, or quit.
+4. For each round, place a legal bet and guess a number in the configured range.
 
-The current implementation starts every session with `$1,000`.
+The minimum bet is `$1`. The maximum bet is the lesser of the starting balance and `$1,000,000`. A winning bet pays
+`bet multiplied by the number range` in total, including the returned stake; for example, a `$100` win in Hard mode
+pays `$2,000`.
 
 ## Current Limitations
 
-This is intentionally an early version. The core now validates bets and number ranges, checks payout overflow, keeps
-player state private, and returns a structured result from the game logic. Remaining work includes:
-
-- Track wins, losses, net profit, largest win, and round history.
-- Add configurable difficulty, starting balances, and betting limits.
-- Consider a money representation with fractional units if the game needs cents.
+Session history is kept in memory and is discarded when the program exits. Cumulative statistics saturate at their
+numeric limits and report when saturation occurs. Money is represented as whole-number units; fractional currency
+would require a separate representation.
 
 The game logic has dependency-free CTest coverage. Run it with:
 
@@ -69,9 +69,8 @@ ctest --test-dir build --output-on-failure
 
 - Correct betting and payout rules
 - Robust input validation and stream recovery
-- Configurable number ranges and difficulty settings
 - Balance and round summaries
-- A menu for playing, viewing statistics, changing settings, and quitting
+- A menu for playing, viewing statistics, and quitting
 
 ### Level 2: Complete terminal casino
 
@@ -79,7 +78,7 @@ ctest --test-dir build --output-on-failure
 - Game-specific betting rules
 - Player profiles and session history
 - Achievements and statistics
-- Configurable starting balances and betting limits
+- Additional configurable betting limits
 
 ### Level 3: Maintainable C++ architecture
 
